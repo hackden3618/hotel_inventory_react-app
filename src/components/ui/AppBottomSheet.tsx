@@ -52,7 +52,7 @@ function AppBottomSheetInner({
 }: Omit<AppBottomSheetProps, 'visible'>) {
   const ref = useRef<BottomSheetModal>(null);
   const snapPoints = React.useMemo(
-    () => snapPointsProp ?? ['50%', '90%', '100%'],
+    () => snapPointsProp ?? ['50%', '75%', '100%'],
     [snapPointsProp],
   );
 
