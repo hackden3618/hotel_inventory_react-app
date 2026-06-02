@@ -21,6 +21,7 @@ const PERIOD_LABELS: Record<Period, string> = {
 export default function LedgerModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { transactions, debtors, creditors, businessName, reportPeriod, setReportPeriod } = useApp();
   const [generating, setGenerating] = useState(false);
+  const [dismiss, setDismiss] = React.useState<(() => void) | null>(null);
 
   const filtered = useMemo(() => {
     const now = new Date();
@@ -80,7 +81,7 @@ export default function LedgerModal({ visible, onClose }: { visible: boolean; on
           <Text className="text-[15px] font-bold text-[#f0f4f0]">Ledger & Trial Balance</Text>
           <Text className="text-[11px] text-[#8a9e8c] mt-0.5">{businessName}</Text>
         </View>
-        <TouchableOpacity onPress={onClose}>
+        <TouchableOpacity onPress={() => dismiss?.()}>
           <Ionicons name="close" size={24} color="#f0f4f0" />
         </TouchableOpacity>
       </View>
@@ -136,6 +137,9 @@ export default function LedgerModal({ visible, onClose }: { visible: boolean; on
 
   return (
     <AppBottomSheet visible={visible} onClose={onClose}>
+      {({ dismiss: dismissFn }) => {
+        if (!dismiss) setDismiss(() => dismissFn);
+        return (
         <View className="bg-[#141714] rounded-t-[20px] max-h-[90%] w-full flex-1">
           <BottomSheetFlatList
             data={filtered}
@@ -192,6 +196,8 @@ export default function LedgerModal({ visible, onClose }: { visible: boolean; on
             </TouchableOpacity>
           </View>
         </View>
+        );
+      }}
     </AppBottomSheet>
   );
 }

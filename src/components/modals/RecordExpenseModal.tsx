@@ -21,13 +21,14 @@ export default function RecordExpenseModal({ visible, onClose }: { visible: bool
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
   const [expensePayMethod, setExpensePayMethod] = useState<'cash' | 'mpesa'>('cash');
+  const [dismiss, setDismiss] = React.useState<(() => void) | null>(null);
 
   const handleClose = () => {
     setOperant('');
     setExpenseTitle('');
     setExpenseAmount('');
     setExpensePayMethod('cash');
-    onClose();
+    dismiss?.();
   };
 
   const handleRecordExpenseSave = () => {
@@ -54,12 +55,15 @@ export default function RecordExpenseModal({ visible, onClose }: { visible: bool
     setExpenseTitle('');
     setExpenseAmount('');
     setExpensePayMethod('cash');
-    onClose();
+    dismiss?.();
     Alert.alert('Expense Logged', 'Transaction compiled.');
   };
 
   return (
     <AppBottomSheet visible={visible} onClose={onClose}>
+      {({ dismiss: dismissFn }) => {
+        if (!dismiss) setDismiss(() => dismissFn);
+        return (
       <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           {/* Header */}
           <View className="flex-row items-center justify-between border-b border-white/5 pb-3 mb-3">
@@ -138,6 +142,8 @@ export default function RecordExpenseModal({ visible, onClose }: { visible: bool
             </TouchableOpacity>
           </View>
       </BottomSheetScrollView>
+        );
+      }}
     </AppBottomSheet>
   );
 }

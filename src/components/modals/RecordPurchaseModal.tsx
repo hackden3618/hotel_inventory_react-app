@@ -23,6 +23,7 @@ export default function RecordPurchaseModal({ visible, onClose }: { visible: boo
   const [supplierPhone, setSupplierPhone] = useState('');
   const [purchaseAmount, setPurchaseAmount] = useState('');
   const [purchaseCredited, setPurchaseCredited] = useState(false);
+  const [dismiss, setDismiss] = React.useState<(() => void) | null>(null);
 
   const handleClose = () => {
     setOperant('');
@@ -31,7 +32,7 @@ export default function RecordPurchaseModal({ visible, onClose }: { visible: boo
     setSupplierPhone('');
     setPurchaseAmount('');
     setPurchaseCredited(false);
-    onClose();
+    dismiss?.();
   };
 
   const handleRecordPurchaseSave = () => {
@@ -72,12 +73,15 @@ export default function RecordPurchaseModal({ visible, onClose }: { visible: boo
     setSupplierPhone('');
     setPurchaseAmount('');
     setPurchaseCredited(false);
-    onClose();
+    dismiss?.();
     Alert.alert('Restock Logged', 'Purchase recorded.');
   };
 
   return (
     <AppBottomSheet visible={visible} onClose={onClose}>
+      {({ dismiss: dismissFn }) => {
+        if (!dismiss) setDismiss(() => dismissFn);
+        return (
       <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           {/* Header */}
           <View className="flex-row items-center justify-between border-b border-white/5 pb-3 mb-3">
@@ -187,6 +191,8 @@ export default function RecordPurchaseModal({ visible, onClose }: { visible: boo
             </TouchableOpacity>
           </View>
         </BottomSheetScrollView>
+        );
+      }}
     </AppBottomSheet>
   );
 }

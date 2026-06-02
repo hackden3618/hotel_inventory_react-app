@@ -47,6 +47,7 @@ export default function SettingsModal({ visible, onClose }: SettingsModalProps) 
   const [closeDayOperant, setCloseDayOperant] = useState('');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetPassword, setResetPassword] = useState('');
+  const [dismiss, setDismiss] = React.useState<(() => void) | null>(null);
 
   // ─── Sync state when modal opens ─────────────────────────────────────────────
   useEffect(() => {
@@ -118,6 +119,9 @@ export default function SettingsModal({ visible, onClose }: SettingsModalProps) 
 
   return (
     <AppBottomSheet visible={visible} onClose={onClose}>
+      {({ dismiss: dismissFn }) => {
+        if (!dismiss) setDismiss(() => dismissFn);
+        return (
       <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           {/* Handle bar */}
           <View className="items-center pt-3 pb-1">
@@ -129,7 +133,7 @@ export default function SettingsModal({ visible, onClose }: SettingsModalProps) 
             <Text className="text-[15px] font-bold text-[#f0f4f0]">Settings</Text>
             <TouchableOpacity
               className="w-8 h-8 rounded-full bg-[#1c201b] items-center justify-center"
-              onPress={onClose}
+              onPress={() => dismiss?.()}
             >
               <Ionicons name="close" size={18} color="#f0f4f0" />
             </TouchableOpacity>
@@ -278,6 +282,8 @@ export default function SettingsModal({ visible, onClose }: SettingsModalProps) 
 
           </View>
       </BottomSheetScrollView>
+        );
+      }}
     </AppBottomSheet>
   );
 }

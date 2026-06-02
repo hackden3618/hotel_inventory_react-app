@@ -17,6 +17,7 @@ import { useApp } from '@/database/AppContext';
 import AppBottomSheet from '@/components/ui/AppBottomSheet';
 
 export default function RecordSaleModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const [dismiss, setDismiss] = React.useState<(() => void) | null>(null);
   const { meals, recordSale } = useApp();
 
   const [operant, setOperant] = useState('');
@@ -36,7 +37,7 @@ export default function RecordSaleModal({ visible, onClose }: { visible: boolean
     setSaleType('dinein');
     setSalePaymentMethod('cash');
     setSaleReferenceName('');
-    onClose();
+    dismiss?.();
   };
 
   const handleSetQuantity = (mealId: number, stock: number, text: string) => {
@@ -114,12 +115,15 @@ export default function RecordSaleModal({ visible, onClose }: { visible: boolean
     setSaleType('dinein');
     setSalePaymentMethod('cash');
     setSaleReferenceName('');
-    onClose();
+    dismiss?.();
     Alert.alert('Transaction Successful', 'Recorded offline in database.');
   };
 
   return (
     <AppBottomSheet visible={visible} onClose={onClose}>
+      {({ dismiss: dismissFn }) => {
+        if (!dismiss) setDismiss(() => dismissFn);
+        return (
       <View className="flex-1 px-5 pt-3">
           {/* Header */}
           <View className="flex-row items-center justify-between border-b border-white/5 pb-3 mb-3">
@@ -299,6 +303,8 @@ export default function RecordSaleModal({ visible, onClose }: { visible: boolean
             </View>
           </BottomSheetScrollView>
       </View>
+        );
+      }}
     </AppBottomSheet>
   );
 }

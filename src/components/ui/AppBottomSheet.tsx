@@ -5,11 +5,19 @@ import {
   BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 
+interface AppBottomSheetChildrenProps {
+  dismiss: () => void;
+}
+
+type AppBottomSheetChildren =
+  | React.ReactNode
+  | ((props: AppBottomSheetChildrenProps) => React.ReactNode);
+
 interface AppBottomSheetProps {
   visible: boolean;
   onClose: () => void;
   snapPoints?: (string | number)[];
-  children: React.ReactNode;
+  children: AppBottomSheetChildren;
   enableDynamicSizing?: boolean;
 }
 
@@ -38,9 +46,8 @@ export default function AppBottomSheet({
       onClose={onClose}
       snapPoints={snapPoints}
       enableDynamicSizing={enableDynamicSizing}
-    >
-      {children}
-    </AppBottomSheetInner>
+      children={children}
+    />
   );
 }
 
@@ -65,6 +72,11 @@ function AppBottomSheetInner({
     return () => cancelAnimationFrame(id);
   }, []);
 
+  // Expose dismiss method to children
+  const dismiss = useCallback(() => {
+    ref.current?.dismiss();
+  }, []);
+
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
@@ -76,6 +88,11 @@ function AppBottomSheetInner({
     ),
     [],
   );
+
+  // Render children - support both function and element children
+  const renderedChildren = typeof children === 'function'
+    ? children({ dismiss })
+    : children;
 
   return (
     <BottomSheetModal
@@ -91,7 +108,7 @@ function AppBottomSheetInner({
       enableDynamicSizing={enableDynamicSizing}
       enablePanDownToClose
     >
-      {children}
+      {renderedChildren}
     </BottomSheetModal>
   );
 }

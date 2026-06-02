@@ -27,6 +27,7 @@ export default function PaymentModal({ visible, onClose, type, personName }: Pay
   const [payAmount, setPayAmount] = useState('');
   const [payMethod, setPayMethod] = useState<'cash' | 'mpesa'>('cash');
   const [operant, setOperant] = useState('');
+  const [dismiss, setDismiss] = React.useState<(() => void) | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -53,13 +54,16 @@ export default function PaymentModal({ visible, onClose, type, personName }: Pay
       recordCreditorPayment(personName, amount, payMethod, operant.trim());
     }
 
-    onClose();
+    dismiss?.();
   };
 
   const isDebtor = type === 'debtor';
 
   return (
     <AppBottomSheet visible={visible} onClose={onClose}>
+      {({ dismiss: dismissFn }) => {
+        if (!dismiss) setDismiss(() => dismissFn);
+        return (
       <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View className="px-5 pt-5 pb-3 border-b-[0.5px] border-white/5 flex-row items-start justify-between">
@@ -69,7 +73,7 @@ export default function PaymentModal({ visible, onClose, type, personName }: Pay
             </Text>
             <Text className="text-[11px] text-[#2ecc71] mt-0.5">{personName}</Text>
           </View>
-          <TouchableOpacity onPress={onClose}>
+          <TouchableOpacity onPress={() => dismiss?.()}>
             <Ionicons name="close" size={24} color="#f0f4f0" />
           </TouchableOpacity>
         </View>
@@ -141,7 +145,7 @@ export default function PaymentModal({ visible, onClose, type, personName }: Pay
             <View className="flex-row gap-2 px-5 pb-5 mt-4">
               <TouchableOpacity
                 className="flex-1 bg-[#1c201b] border-[0.5px] border-white/5 rounded-[10px] py-3 items-center justify-center"
-                onPress={onClose}
+                onPress={() => dismiss?.()}
               >
                 <Text className="text-[13px] font-bold text-[#f0f4f0]">Cancel</Text>
               </TouchableOpacity>
@@ -155,6 +159,8 @@ export default function PaymentModal({ visible, onClose, type, personName }: Pay
               </TouchableOpacity>
             </View>
           </BottomSheetScrollView>
+        );
+      }}
     </AppBottomSheet>
   );
 }

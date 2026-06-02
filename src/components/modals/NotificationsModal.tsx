@@ -12,13 +12,17 @@ interface NotificationsModalProps {
 
 export default function NotificationsModal({ visible, onClose }: NotificationsModalProps) {
   const { notifications, clearAllNotifs } = useApp();
+  const [dismiss, setDismiss] = React.useState<(() => void) | null>(null);
 
   return (
     <AppBottomSheet visible={visible} onClose={onClose}>
+      {({ dismiss: dismissFn }) => {
+        if (!dismiss) setDismiss(() => dismissFn);
+        return (
         <View className="bg-[#141714] rounded-t-[20px] p-4 pb-8 max-h-[90%] w-full flex-1">
           <View className="flex-row items-center justify-between border-b-[0.5px] border-white/5 pb-3 mb-3">
             <Text className="text-[15px] font-bold text-[#f0f4f0]">System Notifications</Text>
-            <TouchableOpacity onPress={onClose}>
+            <TouchableOpacity onPress={() => dismiss?.()}>
               <Ionicons name="close" size={24} color="#f0f4f0" />
             </TouchableOpacity>
           </View>
@@ -48,12 +52,14 @@ export default function NotificationsModal({ visible, onClose }: NotificationsMo
             className="bg-[#2ecc71] rounded-[10px] py-3 items-center justify-center mt-2.5"
             onPress={() => {
               clearAllNotifs();
-              onClose();
+              dismiss?.();
             }}
           >
             <Text className="text-[13px] font-bold text-[#0d1a12]">Mark All as Read</Text>
           </TouchableOpacity>
         </View>
+        );
+      }}
     </AppBottomSheet>
   );
 }
