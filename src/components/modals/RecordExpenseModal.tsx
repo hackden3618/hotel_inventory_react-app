@@ -9,26 +9,12 @@ import {
   Platform,
   Alert
 } from 'react-native';
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetFlatList, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/database/AppContext';
+import AppBottomSheet from '@/components/ui/AppBottomSheet';
 
 export default function RecordExpenseModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const bottomSheetRef = React.useRef<BottomSheetModal>(null);
-  const snapPoints = React.useMemo(() => ['50%', '90%', '100%'], []);
-  
-  React.useEffect(() => {
-    if (visible) {
-      bottomSheetRef.current?.present();
-    } else {
-      bottomSheetRef.current?.dismiss();
-    }
-  }, [visible]);
-
-  const renderBackdrop = React.useCallback(
-    (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-    []
-  );
   const { recordExpense } = useApp();
 
   const [operant, setOperant] = useState('');
@@ -73,18 +59,7 @@ export default function RecordExpenseModal({ visible, onClose }: { visible: bool
   };
 
   return (
-    
-    <BottomSheetModal
-      ref={bottomSheetRef}
-      index={1}
-      snapPoints={snapPoints}
-      onDismiss={onClose}
-      backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#141714', borderRadius: 20 }}
-      handleIndicatorStyle={{ backgroundColor: '#4a5e4c' }}
-      keyboardBehavior="interactive"
-      keyboardBlurBehavior="restore"
-    >
+    <AppBottomSheet visible={visible} onClose={onClose}>
       <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           {/* Header */}
           <View className="flex-row items-center justify-between border-b border-white/5 pb-3 mb-3">
@@ -163,6 +138,6 @@ export default function RecordExpenseModal({ visible, onClose }: { visible: bool
             </TouchableOpacity>
           </View>
       </BottomSheetScrollView>
-    </BottomSheetModal>
+    </AppBottomSheet>
   );
 }

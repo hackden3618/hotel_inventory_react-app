@@ -174,6 +174,7 @@ export function initDatabase() {
     try { db.execSync(sql); } catch (_) { /* column already exists */ }
   };
   safeAlter('ALTER TABLE meals ADD COLUMN isAvailable INTEGER DEFAULT 1');
+  safeAlter('ALTER TABLE transactions ADD COLUMN referenceName TEXT');
   safeAlter('ALTER TABLE transactions ADD COLUMN operant TEXT');
   safeAlter('ALTER TABLE debtors ADD COLUMN phone TEXT');
   safeAlter('ALTER TABLE creditors ADD COLUMN phone TEXT');

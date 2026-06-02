@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetFlatList, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useApp } from '@/database/AppContext';
 import { InventoryItem } from '@/database/db';
+import AppBottomSheet from '@/components/ui/AppBottomSheet';
 
 interface AddInventoryModalProps {
   visible: boolean;
@@ -13,23 +14,6 @@ interface AddInventoryModalProps {
 }
 
 export default function AddInventoryModal({ visible, onClose, editingItem }: AddInventoryModalProps) {
-
-  const bottomSheetRef = React.useRef<BottomSheetModal>(null);
-  const snapPoints = React.useMemo(() => ['50%', '90%', '100%'], []);
-  
-  React.useEffect(() => {
-    if (visible) {
-      bottomSheetRef.current?.present();
-    } else {
-      bottomSheetRef.current?.dismiss();
-    }
-  }, [visible]);
-
-  const renderBackdrop = React.useCallback(
-    (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-    []
-  );
-
   const { addRawInventoryItem, updateRawInventoryItem } = useApp();
   
   const [name, setName] = useState(editingItem?.name || '');
@@ -85,18 +69,7 @@ export default function AddInventoryModal({ visible, onClose, editingItem }: Add
   };
 
   return (
-    
-    <BottomSheetModal
-      ref={bottomSheetRef}
-      index={1}
-      snapPoints={snapPoints}
-      onDismiss={onClose}
-      backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#141714', borderRadius: 20 }}
-      handleIndicatorStyle={{ backgroundColor: '#4a5e4c' }}
-      keyboardBehavior="interactive"
-      keyboardBlurBehavior="restore"
-    >
+    <AppBottomSheet visible={visible} onClose={onClose}>
         <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-[15px] font-bold text-[#f0f4f0]">{editingItem ? 'Edit Raw Ingredient' : 'Add Raw Ingredient'}</Text>
@@ -171,6 +144,6 @@ export default function AddInventoryModal({ visible, onClose, editingItem }: Add
             </TouchableOpacity>
           </View>
         </BottomSheetScrollView>
-    </BottomSheetModal>
+    </AppBottomSheet>
   );
 }

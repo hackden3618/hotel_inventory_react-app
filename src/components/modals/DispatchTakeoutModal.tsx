@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/database/AppContext';
+import AppBottomSheet from '@/components/ui/AppBottomSheet';
 
 interface DispatchTakeoutModalProps {
   visible: boolean;
@@ -10,23 +11,6 @@ interface DispatchTakeoutModalProps {
 }
 
 export default function DispatchTakeoutModal({ visible, onClose }: DispatchTakeoutModalProps) {
-
-  const bottomSheetRef = React.useRef<BottomSheetModal>(null);
-  const snapPoints = React.useMemo(() => ['50%', '90%', '100%'], []);
-  
-  React.useEffect(() => {
-    if (visible) {
-      bottomSheetRef.current?.present();
-    } else {
-      bottomSheetRef.current?.dismiss();
-    }
-  }, [visible]);
-
-  const renderBackdrop = React.useCallback(
-    (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-    []
-  );
-
   const { meals, dispatchTakeout } = useApp();
   const [staffName, setStaffName] = useState('');
   const [selectedItems, setSelectedItems] = useState<{ mealId: number; name: string; qty: number; price: number }[]>([]);
@@ -99,18 +83,7 @@ export default function DispatchTakeoutModal({ visible, onClose }: DispatchTakeo
   const totalItems = selectedItems.reduce((sum, item) => sum + item.qty, 0);
 
   return (
-    
-    <BottomSheetModal
-      ref={bottomSheetRef}
-      index={1}
-      snapPoints={snapPoints}
-      onDismiss={onClose}
-      backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#141714', borderRadius: 20 }}
-      handleIndicatorStyle={{ backgroundColor: '#4a5e4c' }}
-      keyboardBehavior="interactive"
-      keyboardBlurBehavior="restore"
-    >
+    <AppBottomSheet visible={visible} onClose={onClose}>
       <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           <View className="flex-row items-center justify-between p-5 border-b-[0.5px] border-white/5">
             <View>
@@ -192,6 +165,6 @@ export default function DispatchTakeoutModal({ visible, onClose }: DispatchTakeo
             </TouchableOpacity>
           </View>
       </BottomSheetScrollView>
-    </BottomSheetModal>
+    </AppBottomSheet>
   );
 }

@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, FlatList } from 'react-native';
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetFlatList, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/database/AppContext';
+import AppBottomSheet from '@/components/ui/AppBottomSheet';
 
 interface NotificationsModalProps {
   visible: boolean;
@@ -10,38 +11,10 @@ interface NotificationsModalProps {
 }
 
 export default function NotificationsModal({ visible, onClose }: NotificationsModalProps) {
-
-  const bottomSheetRef = React.useRef<BottomSheetModal>(null);
-  const snapPoints = React.useMemo(() => ['50%', '90%', '100%'], []);
-  
-  React.useEffect(() => {
-    if (visible) {
-      bottomSheetRef.current?.present();
-    } else {
-      bottomSheetRef.current?.dismiss();
-    }
-  }, [visible]);
-
-  const renderBackdrop = React.useCallback(
-    (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-    []
-  );
-
   const { notifications, clearAllNotifs } = useApp();
 
   return (
-    
-    <BottomSheetModal
-      ref={bottomSheetRef}
-      index={1}
-      snapPoints={snapPoints}
-      onDismiss={onClose}
-      backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#141714', borderRadius: 20 }}
-      handleIndicatorStyle={{ backgroundColor: '#4a5e4c' }}
-      keyboardBehavior="interactive"
-      keyboardBlurBehavior="restore"
-    >
+    <AppBottomSheet visible={visible} onClose={onClose}>
         <View className="bg-[#141714] rounded-t-[20px] p-4 pb-8 max-h-[90%] w-full flex-1">
           <View className="flex-row items-center justify-between border-b-[0.5px] border-white/5 pb-3 mb-3">
             <Text className="text-[15px] font-bold text-[#f0f4f0]">System Notifications</Text>
@@ -81,6 +54,6 @@ export default function NotificationsModal({ visible, onClose }: NotificationsMo
             <Text className="text-[13px] font-bold text-[#0d1a12]">Mark All as Read</Text>
           </TouchableOpacity>
         </View>
-    </BottomSheetModal>
+    </AppBottomSheet>
   );
 }

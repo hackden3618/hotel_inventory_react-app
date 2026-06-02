@@ -9,10 +9,11 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetFlatList, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/database/AppContext';
 import { updateSetting, getSetting } from '@/database/db';
+import AppBottomSheet from '@/components/ui/AppBottomSheet';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -39,23 +40,6 @@ function FieldLabel({ label }: { label: string }) {
 }
 
 export default function SettingsModal({ visible, onClose }: SettingsModalProps) {
-
-  const bottomSheetRef = React.useRef<BottomSheetModal>(null);
-  const snapPoints = React.useMemo(() => ['50%', '90%', '100%'], []);
-  
-  React.useEffect(() => {
-    if (visible) {
-      bottomSheetRef.current?.present();
-    } else {
-      bottomSheetRef.current?.dismiss();
-    }
-  }, [visible]);
-
-  const renderBackdrop = React.useCallback(
-    (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-    []
-  );
-
   const { businessName, saveBusinessName, transactions, closeDay, resetDatabase } = useApp();
 
   const [tempBusinessName, setTempBusinessName] = useState(businessName);
@@ -133,18 +117,7 @@ export default function SettingsModal({ visible, onClose }: SettingsModalProps) 
   };
 
   return (
-    
-    <BottomSheetModal
-      ref={bottomSheetRef}
-      index={1}
-      snapPoints={snapPoints}
-      onDismiss={onClose}
-      backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#141714', borderRadius: 20 }}
-      handleIndicatorStyle={{ backgroundColor: '#4a5e4c' }}
-      keyboardBehavior="interactive"
-      keyboardBlurBehavior="restore"
-    >
+    <AppBottomSheet visible={visible} onClose={onClose}>
       <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           {/* Handle bar */}
           <View className="items-center pt-3 pb-1">
@@ -245,7 +218,7 @@ export default function SettingsModal({ visible, onClose }: SettingsModalProps) 
               className="bg-[#2ecc71] rounded-[12px] py-4 items-center justify-center"
               onPress={handleCloseDay}
             >
-              <Text className="text-[13px] font-bold text-[#0d1a12]">🔒  Close Day &amp; Begin New Day</Text>
+              <Text className="text-[13px] font-bold text-[#0d1a12]">🔒  Close Day & Begin New Day</Text>
             </TouchableOpacity>
 
             <Text className="text-[10px] text-[#4a5e4c] text-center mt-2 mb-6">
@@ -305,6 +278,6 @@ export default function SettingsModal({ visible, onClose }: SettingsModalProps) 
 
           </View>
       </BottomSheetScrollView>
-    </BottomSheetModal>
+    </AppBottomSheet>
   );
 }

@@ -10,8 +10,9 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetFlatList, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { useApp } from '@/database/AppContext';
+import AppBottomSheet from '@/components/ui/AppBottomSheet';
 
 interface PaymentModalProps {
   visible: boolean;
@@ -21,23 +22,6 @@ interface PaymentModalProps {
 }
 
 export default function PaymentModal({ visible, onClose, type, personName }: PaymentModalProps) {
-
-  const bottomSheetRef = React.useRef<BottomSheetModal>(null);
-  const snapPoints = React.useMemo(() => ['50%', '90%', '100%'], []);
-  
-  React.useEffect(() => {
-    if (visible) {
-      bottomSheetRef.current?.present();
-    } else {
-      bottomSheetRef.current?.dismiss();
-    }
-  }, [visible]);
-
-  const renderBackdrop = React.useCallback(
-    (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-    []
-  );
-
   const { recordDebtorPayment, recordCreditorPayment } = useApp();
 
   const [payAmount, setPayAmount] = useState('');
@@ -75,18 +59,7 @@ export default function PaymentModal({ visible, onClose, type, personName }: Pay
   const isDebtor = type === 'debtor';
 
   return (
-    
-    <BottomSheetModal
-      ref={bottomSheetRef}
-      index={1}
-      snapPoints={snapPoints}
-      onDismiss={onClose}
-      backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#141714', borderRadius: 20 }}
-      handleIndicatorStyle={{ backgroundColor: '#4a5e4c' }}
-      keyboardBehavior="interactive"
-      keyboardBlurBehavior="restore"
-    >
+    <AppBottomSheet visible={visible} onClose={onClose}>
       <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View className="px-5 pt-5 pb-3 border-b-[0.5px] border-white/5 flex-row items-start justify-between">
@@ -182,6 +155,6 @@ export default function PaymentModal({ visible, onClose, type, personName }: Pay
               </TouchableOpacity>
             </View>
           </BottomSheetScrollView>
-    </BottomSheetModal>
+    </AppBottomSheet>
   );
 }

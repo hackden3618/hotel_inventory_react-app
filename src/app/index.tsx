@@ -116,38 +116,21 @@ export default function Index() {
       {/* FLOATING TAB BAR */}
       <FloatingTabBar currentTab={currentTab} setCurrentTab={setCurrentTab} />
 
-      {/* MODALS OVERLAYS */}
-      <RecordSaleModal visible={activeOverlay === 'record-sale'} onClose={() => setActiveOverlay(null)} />
-      <RecordExpenseModal visible={activeOverlay === 'record-expense'} onClose={() => setActiveOverlay(null)} />
-      <RecordPurchaseModal visible={activeOverlay === 'record-purchase'} onClose={() => setActiveOverlay(null)} />
-      <LedgerModal visible={activeOverlay === 'ledger'} onClose={() => setActiveOverlay(null)} />
-      <NotificationsModal visible={activeOverlay === 'notifications'} onClose={() => setActiveOverlay(null)} />
-      <SettingsModal visible={activeOverlay === 'settings'} onClose={() => setActiveOverlay(null)} />
+      {/* CONDITIONALLY MOUNTED MODALS */}
+      {activeOverlay === 'record-sale' && <RecordSaleModal visible onClose={() => setActiveOverlay(null)} />}
+      {activeOverlay === 'record-expense' && <RecordExpenseModal visible onClose={() => setActiveOverlay(null)} />}
+      {activeOverlay === 'record-purchase' && <RecordPurchaseModal visible onClose={() => setActiveOverlay(null)} />}
+      {activeOverlay === 'ledger' && <LedgerModal visible onClose={() => setActiveOverlay(null)} />}
+      {activeOverlay === 'notifications' && <NotificationsModal visible onClose={() => setActiveOverlay(null)} />}
+      {activeOverlay === 'settings' && <SettingsModal visible onClose={() => setActiveOverlay(null)} />}
       
       {/* Component-Specific Modals */}
-      <AddMealModal visible={mealModalVisible} onClose={() => { setMealModalVisible(false); setEditingMeal(undefined); }} editingMeal={editingMeal} />
-      <AddInventoryModal visible={inventoryModalVisible} onClose={() => { setInventoryModalVisible(false); setEditingInventoryItem(undefined); }} editingItem={editingInventoryItem} />
-      <PaymentModal 
-        visible={paymentModalVisible} 
-        onClose={() => setPaymentModalVisible(false)} 
-        type="debtor" 
-        personName={selectedDebtorName} 
-      />
-      <PaymentModal 
-        visible={creditorPayModalVisible} 
-        onClose={() => setCreditorPayModalVisible(false)} 
-        type="creditor" 
-        personName={selectedCreditorName} 
-      />
-      <DispatchTakeoutModal
-        visible={activeOverlay === 'dispatch-takeout'}
-        onClose={() => setActiveOverlay(null)}
-      />
-      <ReconcileTakeoutModal
-        visible={activeReconcileSession !== null}
-        onClose={() => setActiveReconcileSession(null)}
-        session={activeReconcileSession}
-      />
+      {mealModalVisible && <AddMealModal visible onClose={() => { setMealModalVisible(false); setEditingMeal(undefined); }} editingMeal={editingMeal} />}
+      {inventoryModalVisible && <AddInventoryModal visible onClose={() => { setInventoryModalVisible(false); setEditingInventoryItem(undefined); }} editingItem={editingInventoryItem} />}
+      {paymentModalVisible && <PaymentModal visible onClose={() => setPaymentModalVisible(false)} type="debtor" personName={selectedDebtorName} />}
+      {creditorPayModalVisible && <PaymentModal visible onClose={() => setCreditorPayModalVisible(false)} type="creditor" personName={selectedCreditorName} />}
+      {activeOverlay === 'dispatch-takeout' && <DispatchTakeoutModal visible onClose={() => setActiveOverlay(null)} />}
+      {activeReconcileSession !== null && <ReconcileTakeoutModal visible onClose={() => setActiveReconcileSession(null)} session={activeReconcileSession} />}
     </SafeAreaView>
   );
 }

@@ -2,10 +2,11 @@ import React, { useMemo, useState } from 'react';
 import {
   View, Text, TouchableOpacity, FlatList, ScrollView, Alert
 } from 'react-native';
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetFlatList, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '@/database/AppContext';
 import { generateLedgerPDF } from '@/utils/pdfGenerator';
+import AppBottomSheet from '@/components/ui/AppBottomSheet';
 
 type Period = 'today' | 'week' | 'month' | 'year' | 'all';
 
@@ -18,21 +19,6 @@ const PERIOD_LABELS: Record<Period, string> = {
 };
 
 export default function LedgerModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const bottomSheetRef = React.useRef<BottomSheetModal>(null);
-  const snapPoints = React.useMemo(() => ['50%', '90%', '100%'], []);
-  
-  React.useEffect(() => {
-    if (visible) {
-      bottomSheetRef.current?.present();
-    } else {
-      bottomSheetRef.current?.dismiss();
-    }
-  }, [visible]);
-
-  const renderBackdrop = React.useCallback(
-    (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-    []
-  );
   const { transactions, debtors, creditors, businessName, reportPeriod, setReportPeriod } = useApp();
   const [generating, setGenerating] = useState(false);
 
@@ -149,18 +135,7 @@ export default function LedgerModal({ visible, onClose }: { visible: boolean; on
   );
 
   return (
-    
-    <BottomSheetModal
-      ref={bottomSheetRef}
-      index={1}
-      snapPoints={snapPoints}
-      onDismiss={onClose}
-      backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#141714', borderRadius: 20 }}
-      handleIndicatorStyle={{ backgroundColor: '#4a5e4c' }}
-      keyboardBehavior="interactive"
-      keyboardBlurBehavior="restore"
-    >
+    <AppBottomSheet visible={visible} onClose={onClose}>
         <View className="bg-[#141714] rounded-t-[20px] max-h-[90%] w-full flex-1">
           <BottomSheetFlatList
             data={filtered}
@@ -217,6 +192,6 @@ export default function LedgerModal({ visible, onClose }: { visible: boolean; on
             </TouchableOpacity>
           </View>
         </View>
-    </BottomSheetModal>
+    </AppBottomSheet>
   );
 }

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
-import { BottomSheetModal, BottomSheetScrollView, BottomSheetFlatList, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { BottomSheetScrollView, BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useApp } from '@/database/AppContext';
 import { Meal } from '@/database/db';
+import AppBottomSheet from '@/components/ui/AppBottomSheet';
 
 interface AddMealModalProps {
   visible: boolean;
@@ -13,23 +14,6 @@ interface AddMealModalProps {
 }
 
 export default function AddMealModal({ visible, onClose, editingMeal }: AddMealModalProps) {
-
-  const bottomSheetRef = React.useRef<BottomSheetModal>(null);
-  const snapPoints = React.useMemo(() => ['50%', '90%', '100%'], []);
-  
-  React.useEffect(() => {
-    if (visible) {
-      bottomSheetRef.current?.present();
-    } else {
-      bottomSheetRef.current?.dismiss();
-    }
-  }, [visible]);
-
-  const renderBackdrop = React.useCallback(
-    (props: any) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-    []
-  );
-
   const { addNewMeal, updateMeal } = useApp();
   
   const [newMealName, setNewMealName] = useState(editingMeal?.name || '');
@@ -100,18 +84,7 @@ export default function AddMealModal({ visible, onClose, editingMeal }: AddMealM
   };
 
   return (
-    
-    <BottomSheetModal
-      ref={bottomSheetRef}
-      index={1}
-      snapPoints={snapPoints}
-      onDismiss={onClose}
-      backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#141714', borderRadius: 20 }}
-      handleIndicatorStyle={{ backgroundColor: '#4a5e4c' }}
-      keyboardBehavior="interactive"
-      keyboardBlurBehavior="restore"
-    >
+    <AppBottomSheet visible={visible} onClose={onClose}>
         <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-[15px] font-bold text-[#f0f4f0]">{editingMeal ? 'Edit Menu Item' : 'Add Menu Item'}</Text>
@@ -204,6 +177,6 @@ export default function AddMealModal({ visible, onClose, editingMeal }: AddMealM
             </TouchableOpacity>
           </View>
         </BottomSheetScrollView>
-    </BottomSheetModal>
+    </AppBottomSheet>
   );
 }
