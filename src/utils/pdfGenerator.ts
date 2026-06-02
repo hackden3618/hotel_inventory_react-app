@@ -1,6 +1,6 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { Transaction, Debtor, Creditor } from '../database/db';
+import { Transaction, Debtor, Creditor, getTransactionItems } from '../database/db';
 
 export async function generateLedgerPDF(
   businessName: string,
@@ -10,29 +10,41 @@ export async function generateLedgerPDF(
   periodText: string,
   summary: { totalDr: number; totalCr: number; openingBalance: number; trialBalance: number }
 ) {
-  // Generate HTML for professional ledger table & Trial Balance
   const txnRows = transactions
     .map(t => {
-      const isDr = t.type === 'expense' || t.type === 'purchase' || t.type === 'takeaway' || t.type === 'consumed';
+      const isDr = ['expense', 'purchase', 'takeaway', 'consumed'].includes(t.type);
       const drVal = isDr ? `KES ${t.amount.toLocaleString()}` : '';
       const crVal = !isDr ? `KES ${t.amount.toLocaleString()}` : '';
       const dateFormatted = new Date(t.date).toLocaleDateString('en-KE', {
         day: 'numeric',
         month: 'short',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       });
+
+      // Fetch line items for this transaction
+      let lineItemsHtml = '';
+      try {
+        const items = getTransactionItems(t.id);
+        if (items.length > 0) {
+          lineItemsHtml = `<ul style="margin:4px 0 0 0; padding-left:14px; color:#666; font-size:10px;">
+            ${items.map(i => `<li>${i.quantity}× ${i.mealName} @ KES ${i.unitPrice}</li>`).join('')}
+          </ul>`;
+        }
+      } catch (_) { /* no items for this tx */ }
 
       return `
         <tr>
-          <td>${dateFormatted}</td>
+          <td style="white-space:nowrap">${dateFormatted}</td>
           <td>
             <strong>${t.title}</strong><br/>
-            <small style="color: #666;">${t.description}</small>
+            <small style="color:#666">${t.description}</small>
+            ${lineItemsHtml}
           </td>
-          <td style="color: #d35400; text-align: right;">${drVal}</td>
-          <td style="color: #27ae60; text-align: right;">${crVal}</td>
-          <td style="text-transform: capitalize; font-weight: 500;">${t.paymentMethod}</td>
+          <td style="color:#666; font-size:10px">${t.operant || '—'}</td>
+          <td style="color:#d35400; text-align:right">${drVal}</td>
+          <td style="color:#27ae60; text-align:right">${crVal}</td>
+          <td style="text-transform:capitalize; font-weight:500">${t.paymentMethod}</td>
         </tr>
       `;
     })
@@ -41,10 +53,10 @@ export async function generateLedgerPDF(
   const debtorRows = debtors
     .map(d => `
       <tr>
-        <td>${d.name}</td>
-        <td style="color: #c0392b; font-weight: 600;">KES ${d.totalOwed.toLocaleString()}</td>
-        <td style="color: #27ae60;">KES ${d.totalPaid.toLocaleString()}</td>
-        <td style="font-weight: 600;">KES ${(d.totalOwed - d.totalPaid).toLocaleString()}</td>
+        <td>${d.name}${d.phone ? `<br/><small style="color:#64748b">📞 ${d.phone}</small>` : ''}</td>
+        <td style="color:#c0392b; font-weight:600">KES ${d.totalOwed.toLocaleString()}</td>
+        <td style="color:#27ae60">KES ${d.totalPaid.toLocaleString()}</td>
+        <td style="font-weight:600">KES ${(d.totalOwed - d.totalPaid).toLocaleString()}</td>
       </tr>
     `)
     .join('');
@@ -52,44 +64,46 @@ export async function generateLedgerPDF(
   const creditorRows = creditors
     .map(c => `
       <tr>
-        <td>${c.name}</td>
-        <td style="color: #d35400; font-weight: 600;">KES ${c.totalOwed.toLocaleString()}</td>
-        <td style="color: #27ae60;">KES ${c.totalPaid.toLocaleString()}</td>
-        <td style="font-weight: 600;">KES ${(c.totalOwed - c.totalPaid).toLocaleString()}</td>
+        <td>${c.name}${c.phone ? `<br/><small style="color:#64748b">📞 ${c.phone}</small>` : ''}</td>
+        <td style="color:#d35400; font-weight:600">KES ${c.totalOwed.toLocaleString()}</td>
+        <td style="color:#27ae60">KES ${c.totalPaid.toLocaleString()}</td>
+        <td style="font-weight:600">KES ${(c.totalOwed - c.totalPaid).toLocaleString()}</td>
       </tr>
     `)
     .join('');
+
+  const trialBalanceStatus = summary.trialBalance >= 0
+    ? `<span style="color:#27ae60">✓ Credit Balance</span>`
+    : `<span style="color:#e74c3c">⚠ Debit Deficit</span>`;
 
   const htmlContent = `
     <!DOCTYPE html>
     <html>
       <head>
         <meta charset="utf-8">
-        <title>Ledger Report</title>
+        <title>Ledger Report — ${businessName}</title>
         <style>
-          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2c3e50; padding: 20px; background-color: #fff; }
-          .header { border-bottom: 2px solid #2ecc71; padding-bottom: 15px; margin-bottom: 25px; }
-          .header h1 { font-size: 24px; font-weight: bold; margin: 0; color: #1e272c; text-transform: uppercase; }
-          .header p { margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px; }
-          .summary-grid { display: flex; gap: 15px; margin-bottom: 25px; }
-          .summary-card { flex: 1; padding: 12px 15px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; }
-          .summary-card .lbl { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 4px; }
-          .summary-card .val { font-size: 18px; font-weight: bold; color: #0f172a; }
-          .section-title { font-size: 16px; font-weight: bold; color: #0f172a; border-left: 4px solid #2ecc71; padding-left: 8px; margin: 25px 0 12px 0; text-transform: uppercase; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          th { background-color: #f1f5f9; color: #475569; font-weight: 600; text-align: left; font-size: 11px; text-transform: uppercase; padding: 10px; border-bottom: 1px solid #cbd5e1; }
-          td { padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 12px; }
-          .trial-balance { background: #e8f8f5; border: 1px solid #a3e4d7; border-radius: 8px; padding: 15px; margin-bottom: 25px; }
-          .trial-balance table { margin-bottom: 0; }
-          .trial-balance th { background-color: rgba(46,204,113,0.1); color: #16a085; }
-          .footer { text-align: center; margin-top: 40px; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2c3e50; padding: 24px; background: #fff; }
+          .header { border-bottom: 3px solid #2ecc71; padding-bottom: 16px; margin-bottom: 24px; }
+          .header h1 { font-size: 22px; font-weight: bold; margin: 0; color: #1e272c; text-transform: uppercase; letter-spacing: 1px; }
+          .header p { margin: 4px 0 0 0; color: #7f8c8d; font-size: 13px; }
+          .summary-grid { display: flex; gap: 12px; margin-bottom: 24px; }
+          .summary-card { flex: 1; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; }
+          .summary-card .lbl { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px; }
+          .summary-card .val { font-size: 17px; font-weight: bold; color: #0f172a; }
+          .section-title { font-size: 13px; font-weight: bold; color: #0f172a; border-left: 4px solid #2ecc71; padding-left: 8px; margin: 24px 0 10px 0; text-transform: uppercase; letter-spacing: 0.8px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 11px; }
+          th { background: #f1f5f9; color: #475569; font-weight: 700; text-align: left; font-size: 10px; text-transform: uppercase; padding: 8px 10px; border-bottom: 1px solid #cbd5e1; letter-spacing: 0.4px; }
+          td { padding: 9px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+          .trial-row { background: #e8f8f5; font-weight: bold; }
+          .footer { text-align: center; margin-top: 36px; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 14px; }
         </style>
       </head>
       <body>
         <div class="header">
           <h1>${businessName}</h1>
-          <p>Professional Ledger & Trial Balance Report · Period: ${periodText}</p>
-          <p style="font-size:11px; margin-top: 2px;">Generated on: ${new Date().toLocaleString()}</p>
+          <p>Professional Double-Entry Ledger &amp; Trial Balance · Period: ${periodText}</p>
+          <p style="font-size:10px; margin-top:2px; color:#94a3b8">Generated: ${new Date().toLocaleString('en-KE')}</p>
         </div>
 
         <div class="summary-grid">
@@ -98,16 +112,17 @@ export async function generateLedgerPDF(
             <div class="val">KES ${summary.openingBalance.toLocaleString()}</div>
           </div>
           <div class="summary-card">
-            <div class="lbl">Total Dr (Debits)</div>
-            <div class="val" style="color:#d35400;">KES ${summary.totalDr.toLocaleString()}</div>
+            <div class="lbl">Total Debits (Dr)</div>
+            <div class="val" style="color:#d35400">KES ${summary.totalDr.toLocaleString()}</div>
           </div>
           <div class="summary-card">
-            <div class="lbl">Total Cr (Credits)</div>
-            <div class="val" style="color:#27ae60;">KES ${summary.totalCr.toLocaleString()}</div>
+            <div class="lbl">Total Credits (Cr)</div>
+            <div class="val" style="color:#27ae60">KES ${summary.totalCr.toLocaleString()}</div>
           </div>
           <div class="summary-card">
             <div class="lbl">Trial Balance</div>
             <div class="val">KES ${summary.trialBalance.toLocaleString()}</div>
+            <div style="font-size:10px; margin-top:3px">${trialBalanceStatus}</div>
           </div>
         </div>
 
@@ -115,19 +130,28 @@ export async function generateLedgerPDF(
         <table>
           <thead>
             <tr>
-              <th style="width: 15%;">Date</th>
-              <th style="width: 45%;">Description</th>
-              <th style="width: 15%; text-align: right;">Dr</th>
-              <th style="width: 15%; text-align: right;">Cr</th>
-              <th style="width: 10%;">Payment</th>
+              <th style="width:12%">Date</th>
+              <th style="width:38%">Description / Line Items</th>
+              <th style="width:10%">Operant</th>
+              <th style="width:14%; text-align:right">Dr</th>
+              <th style="width:14%; text-align:right">Cr</th>
+              <th style="width:12%">Payment</th>
             </tr>
           </thead>
           <tbody>
-            ${txnRows || '<tr><td colspan="5" style="text-align:center; color:#94a3b8;">No transactions found in this period.</td></tr>'}
+            ${txnRows || '<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px">No transactions in this period.</td></tr>'}
           </tbody>
+          <tfoot>
+            <tr class="trial-row">
+              <td colspan="3" style="text-align:right; font-size:10px; color:#475569; text-transform:uppercase; letter-spacing:0.5px">Totals</td>
+              <td style="text-align:right; color:#d35400">KES ${summary.totalDr.toLocaleString()}</td>
+              <td style="text-align:right; color:#27ae60">KES ${summary.totalCr.toLocaleString()}</td>
+              <td></td>
+            </tr>
+          </tfoot>
         </table>
 
-        ${debtorRows.length > 0 ? `
+        ${debtors.filter(d => d.totalOwed - d.totalPaid > 0).length > 0 ? `
         <div class="section-title">Debtors Ledger</div>
         <table>
           <thead>
@@ -138,13 +162,10 @@ export async function generateLedgerPDF(
               <th>Remaining Balance</th>
             </tr>
           </thead>
-          <tbody>
-            ${debtorRows}
-          </tbody>
-        </table>
-        ` : ''}
+          <tbody>${debtorRows}</tbody>
+        </table>` : ''}
 
-        ${creditorRows.length > 0 ? `
+        ${creditors.filter(c => c.totalOwed - c.totalPaid > 0).length > 0 ? `
         <div class="section-title">Creditors Ledger</div>
         <table>
           <thead>
@@ -155,14 +176,11 @@ export async function generateLedgerPDF(
               <th>Outstanding Balance</th>
             </tr>
           </thead>
-          <tbody>
-            ${creditorRows}
-          </tbody>
-        </table>
-        ` : ''}
+          <tbody>${creditorRows}</tbody>
+        </table>` : ''}
 
         <div class="footer">
-          This is an official ledger statement generated locally by the MealsLedger system.<br/>
+          Official ledger statement generated by Wambu Corner Hotel Management System.<br/>
           &copy; ${new Date().getFullYear()} ${businessName}. All rights reserved.
         </div>
       </body>
@@ -171,8 +189,12 @@ export async function generateLedgerPDF(
 
   try {
     const { uri } = await Print.printToFileAsync({ html: htmlContent });
-    await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Share Ledger Report' });
+    await Sharing.shareAsync(uri, {
+      mimeType: 'application/pdf',
+      dialogTitle: `${businessName} — Ledger Report`,
+    });
   } catch (error) {
-    console.error("Failed to generate PDF:", error);
+    console.error('Failed to generate PDF:', error);
+    throw error;
   }
 }
