@@ -1,0 +1,65 @@
+import { useApp } from "@/database/AppContext";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Text, TouchableOpacity, View, FlatList } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import ScreenHeader from "@/components/ui/ScreenHeader";
+
+export default function NotificationsScreen() {
+  const { notifications, clearAllNotifs } = useApp();
+  const router = useRouter();
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'var(--background)' }}>
+      <ScreenHeader title="System Notifications" subtitle="Alerts and messages" />
+      <View className="flex-1 w-full p-4 bg-background">
+        <FlatList
+          data={notifications}
+              keyExtractor={(item, idx) => `${item.id}-${idx}`}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={
+                <View className="items-center justify-center py-10">
+                  <Text className="text-[11px] text-muted-foreground text-center">
+                    All systems operational. No unread warnings.
+                  </Text>
+                </View>
+              }
+              renderItem={({ item: n }) => (
+                <View className="flex-row py-3 border-b-[0.5px] border-border gap-2.5 items-start">
+                  <View
+                    className={`w-2 h-2 rounded-full mt-1 ${
+                      n.read === 0 ? "bg-destructive" : "bg-transparent"
+                    }`}
+                  />
+                  <View className="flex-1">
+                    <Text className="text-[12px] font-bold text-foreground">
+                      {n.title}
+                    </Text>
+                    <Text className="text-[10px] text-muted-foreground my-0.5">
+                      {n.message}
+                    </Text>
+                    <Text className="text-[8px] text-muted-foreground">
+                      {new Date(n.date).toLocaleDateString()} ·{" "}
+                      {new Date(n.date).toLocaleTimeString()}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            />
+
+            <TouchableOpacity
+              className="bg-primary rounded-[10px] py-4 items-center justify-center mt-2.5"
+              onPress={() => {
+                clearAllNotifs();
+                router.back();
+              }}
+            >
+              <Text className="text-[13px] font-bold text-background">
+                Mark All as Read
+              </Text>
+            </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
